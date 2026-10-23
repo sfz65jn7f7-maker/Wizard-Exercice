@@ -38,7 +38,7 @@ npm install
 
 ## ▶️ Compilation et exécution
 
-Compilez le projet TypeScript :
+Compilez le programme TypeScript :
 
 ```bash
 npx tsc
