@@ -2,7 +2,7 @@
 
 ## 📌 Présentation
 
-Cet exercice est réalisé en **TypeScript** dans le cadre de la programmation orientée objet et des oncepts avancés du langage.
+Cet exercice est réalisé en **TypeScript** dans le cadre de la programmation orientée objet et des concepts avancés du langage.
 
 Il met en pratique la gestion de sorciers, les repositories, les événements et les décorateurs.
 
