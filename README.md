@@ -1,60 +1,30 @@
-# 🧙 Wizard Exercice — Poudlard Academy
+# Poudlard Academy
 
-## 📌 Présentation
+TP TypeScript : types utilitaires, repository générique, décorateurs et type guards.
 
-Cet exercice est réalisé en **TypeScript** dans le cadre de la programmation orientée objet et des concepts avancés du langage.
-
-Il met en pratique la gestion de sorciers, les repositories, les événements et les décorateurs.
-
-## 🛠️ Technologies utilisées
-
-- **TypeScript**
-- **Node.js**
-- **npm**
-- **Git et GitHub**
-
-## 📂 Structure du dossier
-
-```text
-poudlard-academy/
-├── src/
-│   ├── decorators.ts
-│   ├── main.ts
-│   ├── repository.ts
-│   └── types.ts
-├── .gitignore
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## ⚙️ Installation
-
-Vérifiez que Node.js et npm sont installés, puis exécutez :
+## Lancer
 
 ```bash
 npm install
-```
-
-## ▶️ Compilation et exécution
-
-Compilez le programme TypeScript :
-
-```bash
 npx tsc
-```
-
-Puis exécutez le programme compilé :
-
-```bash
 node dist/main.js
 ```
 
-## 🎯 Objectifs pédagogiques
+## Exercices
 
-- Manipuler les types et interfaces TypeScript.
-- Organiser le code en plusieurs modules.
-- Implémenter des repositories pour gérer les données.
-- Utiliser les décorateurs.
-- Mettre en pratique les concepts de programmation orientée objet.
+1. Ajouter un sorcier avec `NewWizard` (`Omit<Wizard, "id">`)
+2. Filtrer les sorciers par maison (`findByHouse`)
+3. Gérer les événements de sort avec `Extract`
+4. Valider la puissance d'un sort avec un décorateur
+5. Mettre en cache les résultats d'une méthode avec un décorateur
+6. Renforcer la validation avec le type guard `isHouse`
 
+## Structure
+
+```text
+src/
+├── types.ts
+├── decorators.ts
+├── repository.ts
+└── main.ts
+```
