@@ -1,48 +1,43 @@
-
-import { NewWizard, Wizard, House, Spell } from "./types";
+import type { NewWizard, Spell, Wizard } from "./types";
 import { ValidateSpellPower } from "./decorators";
 
-export class WizardRepository {
-  private wizards: Wizard[] = [];
-  private nextId = 1;
+// Référentiel générique réutilisable (sorciers, sorts, ...)
+export class Repository<T extends { id: number }> {
+  protected items: T[] = [];
 
-  add(wizard: NewWizard): Wizard {
-    const newWizard: Wizard = {
-      ...wizard,
-      id: this.nextId++,
-    };
-
-    this.wizards.push(newWizard);
-    return newWizard;
+  add(item: T): void {
+    this.items.push(item);
   }
 
-  findByHouse(house: House): Wizard[] {
-    return this.wizards.filter(
-      (wizard) => wizard.house === house
-    );
+  getAll(): T[] {
+    return [...this.items];
   }
 
-  findAll(): Wizard[] {
-    return [...this.wizards];
+  findById(id: number): T | undefined {
+    return this.items.find((item) => item.id === id);
   }
 }
 
-export class SpellRepository {
-  private spells: Spell[] = [];
+export class WizardRepository extends Repository<Wizard> {
   private nextId = 1;
 
-  @ValidateSpellPower
-  add(spell: Omit<Spell, "id">): Spell {
-    const newSpell: Spell = {
-      ...spell,
-      id: this.nextId++,
-    };
-
-    this.spells.push(newSpell);
-    return newSpell;
+  // Exercice 1 : l'appelant ne fournit pas d'id, le repository l'attribue
+  addWizard(newWizard: NewWizard): Wizard {
+    const wizard: Wizard = { id: this.nextId++, ...newWizard };
+    this.add(wizard);
+    return wizard;
   }
 
-  findAll(): Spell[] {
-    return [...this.spells];
+  // Exercice 2 : filtrer par maison
+  findByHouse(house: Wizard["house"]): Wizard[] {
+    return this.getAll().filter((wizard) => wizard.house === house);
+  }
+}
+
+// Exercice 4 : le décorateur est appliqué à add()
+export class SpellRepository extends Repository<Spell> {
+  @ValidateSpellPower
+  override add(spell: Spell): void {
+    super.add(spell);
   }
 }

@@ -1,55 +1,57 @@
-
+// Exercice 4 : refuser un sort dont la puissance est négative
 export function ValidateSpellPower(
-  _target: object,
-  _propertyKey: string,
+  target: object,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
-): PropertyDescriptor {
-  const originalMethod = descriptor.value;
+): void {
+  const originalMethod = descriptor.value as (
+    ...args: unknown[]
+  ) => unknown;
 
-  descriptor.value = function (...args: unknown[]) {
-    const spell = args[0] as { power?: number };
+  descriptor.value = function (this: unknown, ...args: unknown[]): unknown {
+    const candidate: unknown = args[0];
 
-    if (typeof spell?.power === "number" && spell.power < 0) {
-      throw new Error("La puissance du sort ne peut pas être négative.");
+    if (
+      typeof candidate === "object" &&
+      candidate !== null &&
+      "power" in candidate &&
+      typeof candidate.power === "number" &&
+      candidate.power < 0
+    ) {
+      throw new Error("Spell power cannot be negative");
     }
 
     return originalMethod.apply(this, args);
   };
-
-  return descriptor;
 }
 
+// Exercice 5 : mise en cache (un cache séparé par instance)
 export function Cache(
-  _target: object,
-  _propertyKey: string,
+  target: object,
+  propertyKey: string | symbol,
   descriptor: PropertyDescriptor
-): PropertyDescriptor {
-  const originalMethod = descriptor.value;
-  const cache = new WeakMap<object, Map<string, unknown>>();
+): void {
+  const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
 
-  descriptor.value = function (...args: unknown[]) {
-    if ((typeof this !== "object" && typeof this !== "function") || this === null) {
-      return originalMethod.apply(this, args);
-    }
+  const instanceCaches = new WeakMap<object, Map<string, unknown>>();
 
-    let instanceCache = cache.get(this);
-
-    if (!instanceCache) {
-      instanceCache = new Map<string, unknown>();
-      cache.set(this, instanceCache);
+  descriptor.value = function (this: object, ...args: unknown[]): unknown {
+    let cache = instanceCaches.get(this);
+    if (!cache) {
+      cache = new Map<string, unknown>();
+      instanceCaches.set(this, cache);
     }
 
     const key = JSON.stringify(args);
 
-    if (instanceCache.has(key)) {
-      return instanceCache.get(key);
+    if (cache.has(key)) {
+      console.log(`[CACHE HIT] ${String(propertyKey)}`);
+      return cache.get(key);
     }
 
+    console.log(`[CACHE MISS] ${String(propertyKey)}`);
     const result = originalMethod.apply(this, args);
-    instanceCache.set(key, result);
-
+    cache.set(key, result);
     return result;
   };
-
-  return descriptor;
 }

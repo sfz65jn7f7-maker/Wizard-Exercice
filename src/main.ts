@@ -1,122 +1,96 @@
-
-import {
-  AcademyEvent,
-  House,
-  SpellCastEvent,
-  Wizard,
-} from "./types";
-import { WizardRepository, SpellRepository } from "./repository";
+import type { House, SpellCastEvent, Wizard } from "./types";
+import { SpellRepository, WizardRepository } from "./repository";
 import { Cache } from "./decorators";
 
-// Exercice 1 et 2 : ajouter et rechercher des sorciers
-const wizardRepository = new WizardRepository();
+// ---------- Exercice 1 : ajouter un nouveau sorcier ----------
+const wizards = new WizardRepository();
 
-const harry = wizardRepository.add({
+const harry = wizards.addWizard({
   name: "Harry Potter",
-  level: 17,
   house: "Gryffindor",
+  level: 5,
   active: true,
 });
-
-// Test : un nouvel ajout ne nécessite pas d'id.
-const testWizard = wizardRepository.add({
-  name: "Hermione Granger",
-  level: 7,
-  house: "Gryffindor",
-  active: true,
-});
-
-console.log("Test nouvel identifiant :", testWizard.id);
-
-const draco = wizardRepository.add({
-  name: "Draco Malfoy",
-  level: 17,
-  house: "Slytherin",
-  active: true,
-});
-
-console.log(
-  "Sorciers de Slytherin :",
-  wizardRepository.findByHouse("Slytherin")
-);
-
-
 console.log("Sorcier ajouté :", harry);
-console.log(
-  "Sorciers de Gryffindor :",
-  wizardRepository.findByHouse("Gryffindor")
-);
 
-// Exercice 3 : gérer un événement de lancement de sort
+wizards.addWizard({
+  name: "Draco Malfoy",
+  house: "Slytherin",
+  level: 5,
+  active: true,
+});
+wizards.addWizard({
+  name: "Hermione Granger",
+  house: "Gryffindor",
+  level: 6,
+  active: true,
+});
+
+// ---------- Exercice 2 : filtrer par maison ----------
+console.log("Gryffindor :", wizards.findByHouse("Gryffindor"));
+console.log("Slytherin :", wizards.findByHouse("Slytherin"));
+
+// ---------- Exercice 3 : Extract et événements de sort ----------
 function handleSpellCast(event: SpellCastEvent): void {
-  console.log(
-    `${event.spellName} a été lancé par le sorcier ${event.wizardId}.`
-  );
+  console.log(`Wizard ${event.wizardId} cast ${event.spellName}`);
 }
 
-const event: SpellCastEvent = {
+handleSpellCast({
   type: "spell-cast",
-  wizardId: harry.id,
+  wizardId: 1,
   spellName: "Expelliarmus",
-};
+});
 
-handleSpellCast(event);
+// ---------- Exercice 4 : valider la puissance d'un sort ----------
+const spells = new SpellRepository();
 
-const spellRepository = new SpellRepository();
-
-console.log(
-  "Sort ajouté :",
-  spellRepository.add({ name: "Lumos", power: 10 })
-);
+spells.add({
+  id: 102,
+  name: "Protego",
+  category: "defense",
+  power: 50,
+});
+console.log("Sorts enregistrés :", spells.getAll());
 
 try {
-  spellRepository.add({ name: "Sort interdit", power: -5 });
+  spells.add({
+    id: 103,
+    name: "Invalid Spell",
+    category: "attack",
+    power: -10,
+  });
 } catch (error) {
-  console.log(
-    "Erreur attendue :",
-    error instanceof Error ? error.message : error
-  );
+  console.log("Erreur :", error instanceof Error ? error.message : error);
 }
 
-// Exercice 5 : tester le cache
-class SpellService {
-  calculatePower(power: number): number {
-    console.log("Calcul effectué...");
-    return power * 2;
+// ---------- Exercice 5 : méthode mise en cache ----------
+class SpellCalculator {
+  @Cache
+  calculatePower(basePower: number, multiplier: number): number {
+    console.log("Calculating...");
+
+    return basePower * multiplier;
   }
 }
 
-const cacheDescriptor = Object.getOwnPropertyDescriptor(
-  SpellService.prototype,
-  "calculatePower"
-);
+const calculator = new SpellCalculator();
 
-if (cacheDescriptor) {
-  Cache(SpellService.prototype, "calculatePower", cacheDescriptor);
+console.log(calculator.calculatePower(10, 3));
+console.log(calculator.calculatePower(10, 3));
+console.log(calculator.calculatePower(5, 2));
 
-  Object.defineProperty(
-    SpellService.prototype,
-    "calculatePower",
-    cacheDescriptor
-  );
-}
+// ---------- Exercice 6 : Type Guard plus strict ----------
+const validHouses: readonly House[] = [
+  "Gryffindor",
+  "Slytherin",
+  "Ravenclaw",
+  "Hufflepuff",
+];
 
-const service = new SpellService();
-
-console.log("Résultat 1 :", service.calculatePower(10));
-console.log("Résultat 2 :", service.calculatePower(10));
-
-const service2 = new SpellService();
-
-console.log("Résultat 3 :", service2.calculatePower(10));
-
-// Exercice 6 : renforcer la validation de la maison
 function isHouse(value: unknown): value is House {
   return (
-    value === "Gryffindor" ||
-    value === "Slytherin" ||
-    value === "Ravenclaw" ||
-    value === "Hufflepuff"
+    typeof value === "string" &&
+    validHouses.some((house) => house === value)
   );
 }
 
@@ -130,34 +104,27 @@ function isWizard(value: unknown): value is Wizard {
   return (
     typeof candidate.id === "number" &&
     typeof candidate.name === "string" &&
+    isHouse(candidate.house) &&
     typeof candidate.level === "number" &&
-    typeof candidate.active === "boolean" &&
-    isHouse(candidate.house)
+    typeof candidate.active === "boolean"
   );
 }
 
-console.log(
-  "Maison valide :",
-  isHouse("Gryffindor")
-);
+const validData: unknown = {
+  id: 1,
+  name: "Harry Potter",
+  house: "Gryffindor",
+  level: 5,
+  active: true,
+};
 
-console.log(
-  "Maison invalide :",
-  isHouse("Durmstrang")
-);
+const invalidData: unknown = {
+  id: 2,
+  name: "Viktor",
+  house: "Durmstrang",
+  level: 5,
+  active: true,
+};
 
-console.log(
-  "Harry est un sorcier valide :",
-  isWizard(harry)
-);
-
-console.log(
-  "Un objet invalide est-il un sorcier ?",
-  isWizard({
-    id: 99,
-    name: "Inconnu",
-    level: 5,
-    active: true,
-    house: "Durmstrang",
-  })
-);
+console.log(isWizard(validData)); // true
+console.log(isWizard(invalidData)); // false
